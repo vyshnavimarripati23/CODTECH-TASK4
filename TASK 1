@@ -1,0 +1,106 @@
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+from sklearn.preprocessing import StandardScaler
+
+# Create a synthetic dataset
+np.random.seed(42)
+
+n_books = 1000
+n_members = 300
+
+book_ids = np.arange(n_books)
+member_ids = np.random.choice(np.arange(n_members), size=n_books)
+genres = ['Fiction', 'Non-Fiction', 'Science', 'History', 'Biography']
+book_genres = np.random.choice(genres, size=n_books)
+member_ages = np.random.randint(18, 70, size=n_members)
+
+issue_dates = [datetime(2023, 1, 1) + timedelta(days=int(x)) for x in np.random.randint(0, 365, n_books)]
+return_dates = [date + timedelta(days=int(np.random.uniform(7, 30))) for date in issue_dates]
+
+data = pd.DataFrame({
+    'Book_ID': book_ids,
+    'Member_ID': member_ids,
+    'Book_Genre': book_genres,
+    'Member_Age': member_ages[member_ids],
+    'Issue_Date': issue_dates,
+    'Return_Date': return_dates
+})
+
+# Convert categorical data to numeric
+data_encoded = pd.get_dummies(data, columns=['Book_Genre'])
+
+# Standardize the numeric data
+scaler = StandardScaler()
+scaled_data = scaler.fit_transform(data_encoded.drop(columns=['Issue_Date', 'Return_Date']))
+
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score, davies_bouldin_score
+
+# Apply K-means clustering
+kmeans = KMeans(n_clusters=5, random_state=42)
+kmeans_labels = kmeans.fit_predict(scaled_data)
+
+# Evaluate K-means
+kmeans_silhouette = silhouette_score(scaled_data, kmeans_labels)
+kmeans_davies_bouldin = davies_bouldin_score(scaled_data, kmeans_labels)
+
+print(f'K-means Silhouette Score: {kmeans_silhouette}')
+print(f'K-means Davies-Bouldin Index: {kmeans_davies_bouldin}')
+
+
+from sklearn.cluster import AgglomerativeClustering
+
+# Apply hierarchical clustering
+hierarchical = AgglomerativeClustering(n_clusters=5)
+hierarchical_labels = hierarchical.fit_predict(scaled_data)
+
+# Evaluate Hierarchical Clustering
+hierarchical_silhouette = silhouette_score(scaled_data, hierarchical_labels)
+hierarchical_davies_bouldin = davies_bouldin_score(scaled_data, hierarchical_labels)
+
+print(f'Hierarchical Silhouette Score: {hierarchical_silhouette}')
+print(f'Hierarchical Davies-Bouldin Index: {hierarchical_davies_bouldin}')
+
+from sklearn.cluster import DBSCAN
+
+# Apply DBSCAN
+dbscan = DBSCAN(eps=0.5, min_samples=5)
+dbscan_labels = dbscan.fit_predict(scaled_data)
+
+# Evaluate DBSCAN
+dbscan_silhouette = silhouette_score(scaled_data, dbscan_labels)
+dbscan_davies_bouldin = davies_bouldin_score(scaled_data, dbscan_labels)
+
+print(f'DBSCAN Silhouette Score: {dbscan_silhouette}')
+print(f'DBSCAN Davies-Bouldin Index: {dbscan_davies_bouldin}')
+
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Plot K-means clustering results
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x=scaled_data[:, 0], y=scaled_data[:, 1], hue=kmeans_labels, palette='viridis')
+plt.title('K-means Clustering')
+plt.xlabel('Feature 1')
+plt.ylabel('Feature 2')
+plt.show()
+
+
+# Plot Hierarchical clustering results
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x=scaled_data[:, 0], y=scaled_data[:, 1], hue=hierarchical_labels, palette='viridis')
+plt.title('Hierarchical Clustering')
+plt.xlabel('Feature 1')
+plt.ylabel('Feature 2')
+plt.show()
+
+
+# Plot DBSCAN clustering results
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x=scaled_data[:, 0], y=scaled_data[:, 1], hue=dbscan_labels, palette='viridis')
+plt.title('DBSCAN Clustering')
+plt.xlabel('Feature 1')
+plt.ylabel('Feature 2')
+plt.show()
